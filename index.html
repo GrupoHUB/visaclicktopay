@@ -3,40 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pagamento com PayPal</title>
+    <title>Loja Online</title>
     <script src="https://www.paypal.com/sdk/js?client-id=SEU_CLIENT_ID_LIVE&currency=BRL"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .produto { border: 1px solid #ddd; padding: 10px; margin: 10px; display: inline-block; }
+        #carrinho { margin-top: 20px; padding: 10px; border: 1px solid #000; }
+    </style>
 </head>
 <body>
-    <h2>Compre agora!</h2>
-    <p>Clique no botão abaixo para pagar diretamente na página:</p>
+    <h1>Minha Loja</h1>
     
-    <!-- Botão de Pagamento do PayPal -->
+    <div class="produto">
+        <h2>Produto 1</h2>
+        <p>R$ 50,00</p>
+        <button onclick="adicionarAoCarrinho('Produto 1', 50.00)">Adicionar</button>
+    </div>
+    
+    <div class="produto">
+        <h2>Produto 2</h2>
+        <p>R$ 80,00</p>
+        <button onclick="adicionarAoCarrinho('Produto 2', 80.00)">Adicionar</button>
+    </div>
+
+    <h2>Carrinho</h2>
+    <div id="carrinho">
+        <p id="listaItens">Nenhum item no carrinho.</p>
+        <p>Total: R$ <span id="total">0.00</span></p>
+    </div>
+
     <div id="paypal-button-container"></div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            if (typeof paypal === "undefined") {
-                console.error("Erro: PayPal SDK não carregado. Verifique o Client ID.");
-                return;
-            }
+        let total = 0;
+        let itensCarrinho = [];
 
-            paypal.Buttons({
-                createOrder: function(data, actions) {
-                    return actions.order.create({
-                        purchase_units: [{
-                            amount: {
-                                value: '50.00' // Altere para o valor desejado
-                            }
-                        }]
-                    });
-                },
-                onApprove: function(data, actions) {
-                    return actions.order.capture().then(function(details) {
-                        alert('Pagamento concluído com sucesso! Obrigado, ' + details.payer.name.given_name);
-                    });
-                }
-            }).render('#paypal-button-container');
-        });
+        function adicionarAoCarrinho(nome, preco) {
+            itensCarrinho.push({ nome, preco });
+            total += preco;
+            atualizarCarrinho();
+        }
+
+        function atualizarCarrinho() {
+            let lista = itensCarrinho.map(item => `${item.nome} - R$ ${item.preco.toFixed(2)}`).join("<br>");
+            document.getElementById("listaItens").innerHTML = lista || "Nenhum item no carrinho.";
+            document.getElementById("total").innerText = total.toFixed(2);
+        }
+
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: { value: total.toFixed(2) }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    alert('Pagamento concluído! Obrigado, ' + details.payer.name.given_name);
+                });
+            }
+        }).render('#paypal-button-container');
     </script>
 
 </body>
